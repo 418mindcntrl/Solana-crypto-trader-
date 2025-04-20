@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: solana-trader
+    env: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: python app.py
+    envVars:
+      - key: PHANTOM_PRIVATE_KEY
+        value: HyQn44yqsfSyoqqBYX3Q7F4ZzhSuQUWyUrkvHgZ55ZXxZSOz+xD3ndToqxTuRuoH64vIruqHJmaP5/3HcPfzNQ==
