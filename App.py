@@ -9,10 +9,10 @@ import os
 import base64
 
 # === Wallet from ENV ===
-private_key_b64 = os.getenv("PHANTOM_PRIVATE_KEY")
-wallet = Keypair.from_bytes(base64.b64decode(private_key_b64))
-pubkey = wallet.pubkey()
-RPC = Client("https://api.mainnet-beta.solana.com")
+key_b64 = os.getenv("PHANTOM_PRIVATE_KEY")
+if not key_b64:
+    raise ValueError("PHANTOM_PRIVATE_KEY environment variable is required.")
+wallet = Keypair.from_bytes(base64.b64decode(key_b64))
 
 # === Flask App with Auth ===
 app = Flask(__name__)
