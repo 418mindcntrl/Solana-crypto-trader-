@@ -9,7 +9,7 @@ echo =======================================
 set /p PHANTOM_PRIVATE_KEY=Paste your private key 
 
 :: Install required Python modules (only first time)
-pip install requests flask solders solana >nul 2>&1
+pip install requests flask solders solana Base58 >nul 2>&1
 
 :: Run the bot
 python app.py
