@@ -6,5 +6,4 @@ services:
     buildCommand: pip install -r requirements.txt
     startCommand: python app.py
     envVars:
-      - key: PHANTOM_PRIVATE_KEY
-value:
+      - key: PHANTOM_PRIVATE_KEY=
