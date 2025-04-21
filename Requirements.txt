@@ -1,5 +1,4 @@
-flask
-solders
-solana
-requests
-Base58
+flask==2.2.5
+requests==2.31.0
+solana==0.30.1
+base58==2.1.1
