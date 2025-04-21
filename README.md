@@ -25,6 +25,7 @@ Login credentials (default):
 ## 1-Click Deploy
 [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/418mindcntrl/Solana-crypto-trader-.git)
 
+
 ## Setup Instructions
 
 ### 1. Set Your Wallet
@@ -35,7 +36,20 @@ You must provide your own Phantom wallet key to activate the bot.
 
 PHANTOM_PRIVATE_KEY=your_base64_key_here
 
-> Use a burner wallet for safety.
+> Use a burner wallet for safety
+
+
+
+---
+
+### Option B: Run Locally on Windows
+
+1. Install Python 3.10+
+2. Open Command Prompt:
+   ```bash
+   pip install -r requirements.txt
+
+
 
 ### 2. Fund Your Wallet
 After deployment, fund the wallet with ~0.3 SOL to allow trading.
