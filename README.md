@@ -44,10 +44,27 @@ PHANTOM_PRIVATE_KEY=your_base64_key_here
 
 ### Option B: Run Locally on Windows
 
-1. Install Python 3.10+
-2. Open Command Prompt:
-   ```bash
-   pip install -r requirements.txt
+1. Install **Python 3.10+** from [https://python.org](https://python.org)
+2. Download or clone this repository
+3. Double-click the `run_bot.bat` file
+4. When prompted, **paste your base64-encoded Phantom private key**
+5. The bot will automatically:
+- Install required dependencies (requests, flask, solana, solders)
+- Start the trading engine
+- Open a live dashboard if included
+
+---
+
+### Don’t Have Your Phantom Private Key?
+
+- Open Phantom Wallet
+- Go to Settings → Export Private Key
+- Use a burner wallet and convert the key to **64-byte base64**
+- Paste it into the terminal when prompted
+
+---
+
+
 
 
 
