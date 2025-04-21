@@ -5,45 +5,39 @@ import requests
 import json
 import base64
 from base58 import b58decode
-from flask import Flask, render_template_string, request
+from flask import Flask, render_template_string
 from solana.keypair import Keypair
 from solana.rpc.api import Client
 
-# Load wallet from various key formats
+# Prompt user for private key
+print("Paste your Phantom private key (Base64 / Base58 / JSON):")
+key_raw = input("> ").strip()
+
+# Convert key into Keypair object
 def load_wallet(key_input: str) -> Keypair:
     try:
-        # Base64 format
         return Keypair.from_secret_key(base64.b64decode(key_input))
-    except Exception:
-        pass
+    except: pass
     try:
-        # Base58 format (Phantom)
         return Keypair.from_secret_key(b58decode(key_input))
-    except Exception:
-        pass
+    except: pass
     try:
-        # JSON array format
-        if key_input.strip().startswith("["):
-            json_key = json.loads(key_input)
-            return Keypair.from_secret_key(bytes(json_key))
-    except Exception:
-        pass
-    raise ValueError("Unsupported private key format. Use base64, base58, or JSON.")
-
-# Load key from env or prompt
-key_raw = os.getenv("PHANTOM_PRIVATE_KEY")
-if not key_raw:
-    key_raw = input("Enter your private key (Base64/Base58/JSON): ")
+        if key_input.startswith("["):
+            return Keypair.from_secret_key(bytes(json.loads(key_input)))
+    except: pass
+    raise ValueError("Invalid key format. Use base64, base58, or JSON.")
 
 wallet = load_wallet(key_raw)
+del key_raw  # extra security: remove key from memory
 public_key = str(wallet.public_key)
 client = Client("https://api.mainnet-beta.solana.com")
 
-# Bot config
+# Config
 SLIPPAGE = 1
 SPEND_SOL = 0.025
 PROFIT_TARGET = 1.5
 SOL_MINT = "So11111111111111111111111111111111111111112"
+
 TOKENS = [
     {"symbol": "BONK", "mint": "DezXQyF1i2nYzVKjLFh9jq5EujnhPiyx4TKY4LzsdLoL", "price": 0.0, "buy_price": None, "holding": False},
     {"symbol": "WIF", "mint": "5G6RxWyyMFD1Zz3De5QnUvo8WQ3CUEU6dE2S9ZcRZb5i", "price": 0.0, "buy_price": None, "holding": False},
@@ -51,7 +45,7 @@ TOKENS = [
     {"symbol": "SLERF", "mint": "SLERFNUA1NdFZjcDhZzB5tPoXz5FtJ4HYjGQqtF4hhR", "price": 0.0, "buy_price": None, "holding": False}
 ]
 
-# Dashboard & logs
+# Flask dashboard
 app = Flask(__name__)
 logs = []
 
@@ -84,7 +78,7 @@ def swap(input_mint, output_mint, amount=None):
         tx = Transaction.deserialize(tx_bytes)
         tx.sign(wallet)
         client.send_transaction(tx, wallet, opts=TxOpts(skip_preflight=True))
-        log(f"[TX] Swap: {input_mint[:4]}→{output_mint[:4]}")
+        log(f"[TX] Swap: {input_mint[:4]} → {output_mint[:4]}")
         return True
     except Exception as e:
         log(f"[ERROR] Swap failed: {e}")
@@ -110,7 +104,8 @@ def trade_loop():
 @app.route("/", methods=["GET"])
 def dashboard():
     return render_template_string("""
-    <html><head><title>Solana Bot</title></head><body style="background:#0d1117;color:#c9d1d9;font-family:sans-serif;padding:20px;">
+    <html><head><title>Solana Bot</title></head>
+    <body style="background:#0d1117;color:#c9d1d9;font-family:sans-serif;padding:20px;">
     <h2>Solana Auto-Trader</h2>
     <p><b>Wallet:</b> {{ pub }}</p>
     <h3>Status:</h3>
