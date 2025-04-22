@@ -1,6 +1,3 @@
-
-
-
 import os
 import time
 import threading
@@ -53,20 +50,21 @@ def log(msg):
 
 def get_price(mint):
     try:
-        # 1 SOL in lamports
-        amount = int(1e9)
-        res = requests.get(
+        response = requests.get(
             "https://quote-api.jup.ag/v6/quote",
             params={
                 "inputMint": SOL_MINT,
                 "outputMint": mint,
-                "amount": amount
+                "amount": int(1e9)
             }
         )
-        data = res.json()
-        out_amount = int(data["data"][0]["outAmount"])
-        price = out_amount / 1e9
-        return round(price, 10)
+        print(f"DEBUG ({mint[:4]}):", response.text)  # Debug line
+        data = response.json()
+        if "data" in data and "outAmount" in data["data"]:
+            return int(data["data"]["outAmount"]) / 1e9
+        else:
+            log(f"[QUOTE ERROR] No outAmount for {mint[:4]}")
+            return 0.0
     except Exception as e:
         log(f"[PRICE ERROR] {mint[:4]}: {e}")
         return 0.0
