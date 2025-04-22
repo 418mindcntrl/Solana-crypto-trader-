@@ -68,7 +68,7 @@ def get_price(mint):
     except Exception as e:
         log(f"[PRICE ERROR] {mint[:4]}: {e}")
         return 0.0
-            }
+            
         )
         data = res.json()
         out_amount = int(data["data"][0]["outAmount"])
