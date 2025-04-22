@@ -2,7 +2,6 @@ import os
 import time
 import threading
 import requests
-
 import json
 import base64
 from base58 import b58decode
@@ -11,6 +10,7 @@ from solana.keypair import Keypair
 from solana.rpc.api import Client
 from solana.transaction import Transaction
 from solana.rpc.types import TxOpts
+from solana.publickey import PublicKey
 
 print("Paste your Phantom private key (Base64 / Base58 / JSON):")
 key_raw = input("> ").strip()
@@ -82,11 +82,9 @@ def get_price():
         log(f"[PRICE ERROR] {e}")
         return 0.0
 
-from solana.publickey import PublicKey  # Make sure this is at the top
-
 def get_sol_balance():
     try:
-        pubkey = PublicKey(str(wallet.public_key))  # Ensure proper conversion
+        pubkey = PublicKey(str(wallet.public_key))
         res = client.get_balance(pubkey)
         balance = res['result']['value'] / 1e9
         print("[INFO] Wallet SOL balance:", balance)
