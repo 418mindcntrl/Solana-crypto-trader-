@@ -11,21 +11,34 @@ from solana.rpc.api import Client
 from solana.transaction import Transaction
 from solana.rpc.types import TxOpts
 
-# Prompt for private key
 print("Paste your Phantom private key (Base64 / Base58 / JSON):")
 key_raw = input("> ").strip()
 
 def load_wallet(key_input: str) -> Keypair:
-    try: return Keypair.from_secret_key(base64.b64decode(key_input))
-    except: pass
-    try: return Keypair.from_secret_key(b58decode(key_input))
-    except: pass
-    try: return Keypair.from_secret_key(bytes(json.loads(key_input)))
-    except: pass
+    try:
+        key = base64.b64decode(key_input)
+        print("[INFO] Loaded Base64 key")
+        return Keypair.from_secret_key(key)
+    except:
+        pass
+    try:
+        key = b58decode(key_input)
+        print("[INFO] Loaded Base58 key")
+        return Keypair.from_secret_key(key)
+    except:
+        pass
+    try:
+        key = bytes(json.loads(key_input))
+        print("[INFO] Loaded JSON array key")
+        return Keypair.from_secret_key(key)
+    except:
+        pass
     raise ValueError("Invalid private key format.")
 
 wallet = load_wallet(key_raw)
 public_key = str(wallet.public_key)
+print("[WALLET] Public Key:", public_key)
+
 client = Client("https://api.mainnet-beta.solana.com")
 
 SLIPPAGE = 1
@@ -59,7 +72,6 @@ def get_price():
             }
         )
         data = res.json()
-        print("DEBUG:", data)
         if "data" in data and "outAmount" in data["data"]:
             return int(data["data"]["outAmount"]) / 1e6
         else:
@@ -72,8 +84,11 @@ def get_price():
 def get_sol_balance():
     try:
         res = client.get_balance(wallet.public_key)
-        return res['result']['value'] / 1e9
-    except:
+        balance = res['result']['value'] / 1e9
+        print("[INFO] Wallet SOL balance:", balance)
+        return balance
+    except Exception as e:
+        print("[ERROR] Could not get SOL balance:", e)
         return 0.0
 
 def swap(input_mint, output_mint, amount=None):
@@ -110,16 +125,11 @@ def trade_loop():
                 if spend >= 0.001:
                     log(f"[ATTEMPT] Swapping {spend} SOL → USDC...")
                     if swap(SOL_MINT, USDC_MINT, int(spend * 1e9)):
-                        pass
-                    else:
-                        log("[SWAP FAIL] Could not buy USDC")
                         state["buy_price"] = price
                         state["holding"] = True
                         log(f"[BUY] USDC @ {price}")
-            elif price >= state["buy_price"] * PROFIT_TARGET:
-                if swap(USDC_MINT, SOL_MINT):
-                    state["holding"] = False
-                    log(f"[SELL] USDC @ {price}")
+                    else:
+                        log("[SWAP FAIL] Could not buy USDC")
         time.sleep(30)
 
 @app.route("/", methods=["GET"])
