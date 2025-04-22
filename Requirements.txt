@@ -1,4 +1,8 @@
-flask==2.2.5
-requests==2.31.0
-Solana==0.30.1
-base58==2.1.1
+flask
+requests
+solana
+base58
+cachetools
+solders
+
+
