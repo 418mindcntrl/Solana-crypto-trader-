@@ -5,6 +5,7 @@ base58
 cachetools
 solders
 solana.keypair
+solana.publickey
 
 
 
