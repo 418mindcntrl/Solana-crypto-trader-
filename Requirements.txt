@@ -3,7 +3,7 @@ requests
 solana==0.26.0
 base58
 cachetools
-solders
+
 solana.keypair
 solana.publickey
 
