@@ -19,7 +19,7 @@ if username != "admin" or password != "1234":
     print("Access denied.")
     exit()
 
-# ===== Private Key Input =====
+# ===== Private Key Input ====
 print("Paste your Phantom private key (Base64 / Base58 / JSON):")
 key_raw = input("> ").strip()
 
