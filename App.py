@@ -5,13 +5,13 @@ import requests
 import json
 import base64
 from base58 import b58decode
-from flask import Flask, request, render_template_string, redirect
+from flask import Flask, render_template_string, redirect
 from solana.keypair import Keypair
 from solana.rpc.api import Client
 from solana.transaction import Transaction
 from solana.rpc.types import TxOpts
 
-# ===== Prompt for Private Key =====
+# Prompt for private key
 print("Paste your Phantom private key (Base64 / Base58 / JSON):")
 key_raw = input("> ").strip()
 
@@ -31,14 +31,14 @@ client = Client("https://api.mainnet-beta.solana.com")
 SLIPPAGE = 1
 PROFIT_TARGET = 1.5
 SOL_MINT = "So11111111111111111111111111111111111111112"
+USDC_MINT = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
 TRADING_ENABLED = False
 
-TOKENS = [
-    {"symbol": "WIF", "mint": "5dAPUcB5kDo61tJmoMscJZo8vnkfLDKo3XBqDKt8WZz7", "price": 0.0, "buy_price": None, "holding": False},
-    {"symbol": "JUP", "mint": "JUP4Fb2cqiRUcaTHdrPC8h2gNsA2ETXiPDD33WcGuJB", "price": 0.0, "buy_price": None, "holding": False},
-    {"symbol": "USDC", "mint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v", "price": 0.0, "buy_price": None, "holding": False},
-    {"symbol": "PYTH", "mint": "PYTHnPvHyduF6C6CJwjjcRh7xnWwGEEpB2CSDBVXc4C", "price": 0.0, "buy_price": None, "holding": False}
-]
+state = {
+    "price": 0.0,
+    "buy_price": None,
+    "holding": False
+}
 
 app = Flask(__name__)
 logs = []
@@ -48,25 +48,25 @@ def log(msg):
     logs.insert(0, f"{timestamp} {msg}")
     logs[:] = logs[:100]
 
-def get_price(mint):
+def get_price():
     try:
-        response = requests.get(
+        res = requests.get(
             "https://quote-api.jup.ag/v6/quote",
             params={
                 "inputMint": SOL_MINT,
-                "outputMint": mint,
+                "outputMint": USDC_MINT,
                 "amount": int(1e9)
             }
         )
-        print(f"DEBUG ({mint[:4]}):", response.text)  # Debug line
-        data = response.json()
+        data = res.json()
+        print("DEBUG:", data)
         if "data" in data and "outAmount" in data["data"]:
-            return int(data["data"]["outAmount"]) / 1e9
+            return int(data["data"]["outAmount"]) / 1e6
         else:
-            log(f"[QUOTE ERROR] No outAmount for {mint[:4]}")
+            log("[QUOTE ERROR] No outAmount found")
             return 0.0
     except Exception as e:
-        log(f"[PRICE ERROR] {mint[:4]}: {e}")
+        log(f"[PRICE ERROR] {e}")
         return 0.0
 
 def get_sol_balance():
@@ -84,7 +84,7 @@ def swap(input_mint, output_mint, amount=None):
             "outputMint": output_mint,
             "amount": str(amount) if amount else None,
             "slippageBps": str(SLIPPAGE * 100),
-            "swapMode": "ExactIn" if amount else "ExactOut"
+            "swapMode": "ExactIn"
         }).json()
 
         tx_bytes = base64.b64decode(quote["swapTransaction"])
@@ -101,43 +101,43 @@ def trade_loop():
     global TRADING_ENABLED
     while True:
         if TRADING_ENABLED:
-            for token in TOKENS:
-                token["price"] = get_price(token["mint"])
-                if token["price"] == 0:
-                    continue
-                if not token["holding"]:
-                    sol = get_sol_balance()
-                    spend = max(0, sol - 0.002)
-                    if spend >= 0.001:
-                        if swap(SOL_MINT, token["mint"], int(spend * 1e9)):
-                            token["buy_price"] = token["price"]
-                            token["holding"] = True
-                            log(f"[BUY] {token['symbol']} @ {token['price']}")
-                elif token["price"] >= token["buy_price"] * PROFIT_TARGET:
-                    if swap(token["mint"], SOL_MINT):
-                        token["holding"] = False
-                        log(f"[SELL] {token['symbol']} @ {token['price']}")
+            price = get_price()
+            state["price"] = price
+            if not state["holding"]:
+                sol = get_sol_balance()
+                spend = max(0, sol - 0.002)
+                if spend >= 0.001:
+                    if swap(SOL_MINT, USDC_MINT, int(spend * 1e9)):
+                        state["buy_price"] = price
+                        state["holding"] = True
+                        log(f"[BUY] USDC @ {price}")
+            elif price >= state["buy_price"] * PROFIT_TARGET:
+                if swap(USDC_MINT, SOL_MINT):
+                    state["holding"] = False
+                    log(f"[SELL] USDC @ {price}")
         time.sleep(30)
 
 @app.route("/", methods=["GET"])
 def dashboard():
     toggle_label = "Pause Bot" if TRADING_ENABLED else "Start Bot"
     return render_template_string("""
-    <html><head><title>Solana Bot</title></head>
+    <html><head><title>SOL-USDC Trader</title></head>
     <body style="background:#0d1117;color:#c9d1d9;font-family:sans-serif;padding:20px;">
-    <h2>Solana Auto-Trader</h2>
+    <h2>SOL ⇄ USDC Auto-Trader</h2>
     <p><b>Wallet:</b> {{ pub }}</p>
     <form action="/toggle" method="post">
         <button type="submit" style="padding:8px 16px;">{{ toggle_label }}</button>
     </form>
     <h3>Status:</h3>
-    {% for token in tokens %}
-        <div>{{ token.symbol }} | Price: {{ token.price }} | Holding: {{ token.holding }}{% if token.buy_price %} (Bought @ {{ token.buy_price }}){% endif %}</div>
-    {% endfor %}
+    <div>USDC Price (1 SOL): {{ price }}</div>
+    <div>Holding USDC: {{ holding }}</div>
+    {% if buy_price %}
+        <div>Bought @: {{ buy_price }}</div>
+    {% endif %}
     <h3>Logs:</h3>
     <pre>{% for l in logs %}{{ l }}\n{% endfor %}</pre>
     </body></html>
-    """, logs=logs, tokens=TOKENS, pub=public_key, toggle_label=toggle_label)
+    """, logs=logs, pub=public_key, price=state["price"], holding=state["holding"], buy_price=state["buy_price"])
 
 @app.route("/toggle", methods=["POST"])
 def toggle():
