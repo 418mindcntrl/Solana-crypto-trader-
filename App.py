@@ -106,8 +106,13 @@ def trade_loop():
             if not state["holding"]:
                 sol = get_sol_balance()
                 spend = max(0, sol - 0.002)
+                log(f"[CHECK] SOL balance: {sol}, Spendable: {spend}")
                 if spend >= 0.001:
+                    log(f"[ATTEMPT] Swapping {spend} SOL → USDC...")
                     if swap(SOL_MINT, USDC_MINT, int(spend * 1e9)):
+                        pass
+                    else:
+                        log("[SWAP FAIL] Could not buy USDC")
                         state["buy_price"] = price
                         state["holding"] = True
                         log(f"[BUY] USDC @ {price}")
