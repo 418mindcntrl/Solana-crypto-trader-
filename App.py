@@ -50,10 +50,20 @@ def log(msg):
 
 def get_price(mint):
     try:
-        res = requests.get(f"https://public-api.birdeye.so/public/price?address={mint}", headers={
-            "X-API-KEY": "public"
-        })
-        return float(res.json()["data"]["value"])
+        # 1 SOL in lamports
+        amount = int(1e9)
+        res = requests.get(
+            "https://quote-api.jup.ag/v6/quote",
+            params={
+                "inputMint": SOL_MINT,
+                "outputMint": mint,
+                "amount": amount
+            }
+        )
+        data = res.json()
+        out_amount = int(data["data"][0]["outAmount"])
+        price = out_amount / 1e9
+        return round(price, 10)
     except Exception as e:
         log(f"[PRICE ERROR] {mint[:4]}: {e}")
         return 0.0
