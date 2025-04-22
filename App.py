@@ -83,7 +83,7 @@ def get_price():
 
 def get_sol_balance():
     try:
-        res = client.get_balance(wallet.public_key)
+        res = client.get_balance(str(wallet.public_key))
         balance = res['result']['value'] / 1e9
         print("[INFO] Wallet SOL balance:", balance)
         return balance
