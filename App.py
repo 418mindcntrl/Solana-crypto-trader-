@@ -1,3 +1,6 @@
+
+
+
 import os
 import time
 import threading
@@ -34,10 +37,10 @@ SOL_MINT = "So11111111111111111111111111111111111111112"
 TRADING_ENABLED = False
 
 TOKENS = [
-    {"symbol": "BONK", "mint": "DezXQyF1i2nYzVKjLFh9jq5EujnhPiyx4TKY4LzsdLoL", "price": 0.0, "buy_price": None, "holding": False},
-    {"symbol": "WIF", "mint": "5G6RxWyyMFD1Zz3De5QnUvo8WQ3CUEU6dE2S9ZcRZb5i", "price": 0.0, "buy_price": None, "holding": False},
+    {"symbol": "WIF", "mint": "5dAPUcB5kDo61tJmoMscJZo8vnkfLDKo3XBqDKt8WZz7", "price": 0.0, "buy_price": None, "holding": False},
     {"symbol": "JUP", "mint": "JUP4Fb2cqiRUcaTHdrPC8h2gNsA2ETXiPDD33WcGuJB", "price": 0.0, "buy_price": None, "holding": False},
-    {"symbol": "SLERF", "mint": "SLERFNUA1NdFZjcDhZzB5tPoXz5FtJ4HYjGQqtF4hhR", "price": 0.0, "buy_price": None, "holding": False}
+    {"symbol": "USDC", "mint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v", "price": 0.0, "buy_price": None, "holding": False},
+    {"symbol": "PYTH", "mint": "PYTHnPvHyduF6C6CJwjjcRh7xnWwGEEpB2CSDBVXc4C", "price": 0.0, "buy_price": None, "holding": False}
 ]
 
 app = Flask(__name__)
@@ -50,26 +53,16 @@ def log(msg):
 
 def get_price(mint):
     try:
-        response = requests.get(
+        # 1 SOL in lamports
+        amount = int(1e9)
+        res = requests.get(
             "https://quote-api.jup.ag/v6/quote",
             params={
                 "inputMint": SOL_MINT,
                 "outputMint": mint,
-                "amount": int(1e9)  # 1 SOL
+                "amount": amount
             }
         )
-        data = response.json()
-        if "data" in data and "outAmount" in data["data"]:
-            out_amount = int(data["data"]["outAmount"])
-            return out_amount / 1e9
-        else:
-            log(f"[QUOTE ERROR] No outAmount for {mint[:4]}")
-            return 0.0
-    except Exception as e:
-        log(f"[PRICE ERROR] {mint[:4]}: {e}")
-        return 0.0
-            
-        
         data = res.json()
         out_amount = int(data["data"][0]["outAmount"])
         price = out_amount / 1e9
