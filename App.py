@@ -59,11 +59,11 @@ def get_price(mint):
             }
         )
         data = response.json()
-        if "data" in data and isinstance(data["data"], list) and len(data["data"]) > 0:
-            out_amount = int(data["data"][0].get("outAmount", 0))
-            return out_amount / 1e9 if out_amount else 0.0
+        if "data" in data and "outAmount" in data["data"]:
+            out_amount = int(data["data"]["outAmount"])
+            return out_amount / 1e9
         else:
-            log(f"[QUOTE ERROR] Invalid data for mint {mint[:4]}")
+            log(f"[QUOTE ERROR] No outAmount for {mint[:4]}")
             return 0.0
     except Exception as e:
         log(f"[PRICE ERROR] {mint[:4]}: {e}")
