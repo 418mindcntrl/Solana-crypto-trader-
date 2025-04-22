@@ -52,10 +52,13 @@ def log(msg):
 
 def get_price(symbol):
     try:
-        response = requests.get(f"https://public-api.birdeye.so/public/price?symbol={symbol}", headers={
+        url = f"https://public-api.birdeye.so/public/price?symbol={symbol}"
+        headers = {
             "X-API-KEY": "public"
-        })
-        return response.json()["data"]["value"]
+        }
+        res = requests.get(url, headers=headers)
+        data = res.json()
+        return float(data["data"]["value"])
     except Exception as e:
         log(f"[PRICE ERROR] {symbol}: {e}")
         return 0.0
