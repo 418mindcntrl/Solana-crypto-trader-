@@ -82,9 +82,12 @@ def get_price():
         log(f"[PRICE ERROR] {e}")
         return 0.0
 
+from solana.publickey import PublicKey  # Make sure this is at the top
+
 def get_sol_balance():
     try:
-        res = client.get_balance(str(wallet.public_key))
+        pubkey = PublicKey(str(wallet.public_key))  # Ensure proper conversion
+        res = client.get_balance(pubkey)
         balance = res['result']['value'] / 1e9
         print("[INFO] Wallet SOL balance:", balance)
         return balance
