@@ -52,9 +52,12 @@ def log(msg):
 
 def get_price(symbol):
     try:
-        res = requests.get(f"https://price.jup.ag/v4/price?ids={symbol}")
-        return float(res.json()["data"][symbol]["price"])
-    except:
+        response = requests.get(f"https://public-api.birdeye.so/public/price?symbol={symbol}", headers={
+            "X-API-KEY": "public"
+        })
+        return response.json()["data"]["value"]
+    except Exception as e:
+        log(f"[PRICE ERROR] {symbol}: {e}")
         return 0.0
 
 def get_sol_balance():
