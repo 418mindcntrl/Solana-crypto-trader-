@@ -69,7 +69,7 @@ def get_price(mint):
         log(f"[PRICE ERROR] {mint[:4]}: {e}")
         return 0.0
             
-        )
+        
         data = res.json()
         out_amount = int(data["data"][0]["outAmount"])
         price = out_amount / 1e9
