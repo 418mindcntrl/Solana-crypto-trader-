@@ -50,14 +50,24 @@ def log(msg):
 
 def get_price(mint):
     try:
-        # 1 SOL in lamports
-        amount = int(1e9)
-        res = requests.get(
+        response = requests.get(
             "https://quote-api.jup.ag/v6/quote",
             params={
                 "inputMint": SOL_MINT,
                 "outputMint": mint,
-                "amount": amount
+                "amount": int(1e9)  # 1 SOL
+            }
+        )
+        data = response.json()
+        if "data" in data and isinstance(data["data"], list) and len(data["data"]) > 0:
+            out_amount = int(data["data"][0].get("outAmount", 0))
+            return out_amount / 1e9 if out_amount else 0.0
+        else:
+            log(f"[QUOTE ERROR] Invalid data for mint {mint[:4]}")
+            return 0.0
+    except Exception as e:
+        log(f"[PRICE ERROR] {mint[:4]}: {e}")
+        return 0.0
             }
         )
         data = res.json()
